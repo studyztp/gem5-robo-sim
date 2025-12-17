@@ -74,11 +74,9 @@ cd webots
 make -j$(nproc)
 ```
 
-Build time: ~15-30 minutes depending on your system.
-
 ### Bridge Library
 
-The bridge library provides Unix-domain socket communication between gem5 and Webots.
+The bridge library provides Unix-domain socket communication between different processes, such as gem5 and Webots.
 
 **Install dependencies (Ubuntu/Debian):**
 
