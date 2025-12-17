@@ -1,9 +1,7 @@
 import argparse
 from pathlib import Path
-import array, struct, ctypes
 import m5
 from m5.objects import Root
-from boards.fs_STM32G4 import STM32G4FSBoard
 
 import sys, os
 
@@ -17,6 +15,10 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "--binary", type=str, required=True, help="Path to the binary to run"
 )
+parser.add_argument(
+    "--mode", type=str, default="fs", choices=["fs", "se"], help="Simulation mode"
+)
+
 args = parser.parse_args()
 
 binary_path = Path(args.binary)
@@ -26,13 +28,21 @@ if not binary_path.is_file():
 
 server_name = args.server_name
 
-board = STM32G4FSBoard()
+if args.mode == "fs":
+    from boards.fs_STM32G4 import STM32G4FSBoard
+    board = STM32G4FSBoard()
+else:
+    from boards.se_STM32G4 import STM32G4SEBoard
+    board = STM32G4SEBoard()
 board.setup_workload(binary_path)
 system = board.get_system()
 
 root = Root(full_system=True, system=system)
 
 m5.instantiate()
+
+if args.mode == "se":
+    board.setup_process_mappings()
 
 runtimes = []
 begin_tick = 0

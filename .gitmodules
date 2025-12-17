@@ -7,3 +7,6 @@
 [submodule "bridge"]
 	path = bridge
 	url = https://github.com/studyztp/bridge.git
+[submodule "ento-bench"]
+	path = ento-bench
+	url = https://github.com/studyztp/ento-bench.git
