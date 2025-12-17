@@ -1,49 +1,74 @@
 # gem5-robo-sim
 
-## Building tools
+A simulation framework integrating gem5 with Webots for robotic systems on STM32G4 microcontroller boards. This project supports both System Call Emulation (SE) and Full System (FS) simulation modes.
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Building Tools](#building-tools)
+  - [gem5](#gem5)
+  - [Webots](#webots)
+  - [Bridge Library](#bridge-library)
+  - [Entobench](#entobench)
+- [Running Simulations](#running-simulations)
+  - [SE Mode: Microbenchmarks](#se-mode-microbenchmarks)
+  - [FS Mode: gem5 + Webots](#fs-mode-gem5--webots)
+- [Troubleshooting](#troubleshooting)
+
+## Building Tools
 
 ### gem5
 
-Ubuntu dependencies:
+The gem5 simulator is used for cycle-accurate simulation of ARM Cortex-M4 processors.
 
-```
-build-essential scons python3-dev git pre-commit zlib1g zlib1g-dev \
+**Install dependencies (Ubuntu/Debian):**
+
+```bash
+sudo apt-get install -y \
+    build-essential scons python3-dev git pre-commit zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
-    libboost-all-dev  libhdf5-serial-dev python3-pydot python3-venv python3-tk mypy \
+    libboost-all-dev libhdf5-serial-dev python3-pydot python3-venv python3-tk mypy \
     m4 libcapstone-dev libpng-dev libelf-dev pkg-config wget cmake doxygen clang-format
 ```
+
+**Build gem5:**
 
 ```bash
 cd gem5
 scons build/ARM/gem5.opt -j$(nproc)
 ```
 
-### webots
+Build time: ~30-60 minutes depending on your system.
 
-Ubuntu dependencies:
+### Webots
 
-```
-git cmake swig libglu1-mesa-dev libglib2.0-dev libfreeimage3 libfreetype6-dev libxml2-dev libboost-dev libssh-gcrypt-dev libzip-dev libreadline-dev pbzip2 wget zip unzip python3 python3-pip libopenal-dev
-```
+Webots is an open-source robot simulator used for full-system simulation with physical interactions.
 
-Environment variables:
+**Install dependencies (Ubuntu/Debian):**
 
 ```bash
-#######################################################
-# Edit these WEBOTS environment variables when needed #
-#######################################################
-
-export WEBOTS_DISABLE_SAVE_SCREEN_PERSPECTIVE_ON_CLOSE=1  # If defined, Webots will not save screen specific perspective changes when closed.
-export WEBOTS_ALLOW_MODIFY_INSTALLATION=1                 # If defined, you are allowed to modify files in the Webots home using Webots.
-
-#########################################################################
-# These environment variables are necessaries to compile and run Webots #
-#########################################################################
-
-export WEBOTS_HOME=$PWD/webots  # Defines the path to Webots home.
+sudo apt-get install -y \
+    git cmake swig libglu1-mesa-dev libglib2.0-dev libfreeimage3 libfreetype6-dev \
+    libxml2-dev libboost-dev libssh-gcrypt-dev libzip-dev libreadline-dev pbzip2 \
+    wget zip unzip python3 python3-pip libopenal-dev
 ```
 
-commands:
+**Set up environment variables:**
+
+Add these to your `~/.bashrc` or run before each session:
+
+```bash
+# Optional: Disable saving screen perspective changes
+export WEBOTS_DISABLE_SAVE_SCREEN_PERSPECTIVE_ON_CLOSE=1
+
+# Optional: Allow modifying Webots installation files
+export WEBOTS_ALLOW_MODIFY_INSTALLATION=1
+
+# Required: Set Webots home directory
+export WEBOTS_HOME=$PWD/webots
+```
+
+**Build Webots:**
 
 ```bash
 python3 -m venv venv
@@ -52,113 +77,189 @@ cd webots
 make -j$(nproc)
 ```
 
-### bridge
+Build time: ~15-30 minutes depending on your system.
 
-Ubuntu dependencies:
+### Bridge Library
 
-```text
-build-essential cmake g++ make python3 python3-dev python3-pip
+The bridge library provides Unix-domain socket communication between gem5 and Webots.
+
+**Install dependencies (Ubuntu/Debian):**
+
+```bash
+sudo apt-get install -y build-essential cmake g++ make python3 python3-dev python3-pip
 ```
 
-python dependencies:
+**Install Python dependencies:**
 
-```text
-pybind11 setuptools wheel
+```bash
+pip install pybind11 setuptools wheel
 ```
 
-c++ library:
+**Build C++ library:**
 
 ```bash
 cd bridge
-cmake -S $PWD -B build
+mkdir -p build
+cmake -S . -B build
 cmake --build build --parallel
 ```
 
-python library:
+**Build Python bindings:**
 
 ```bash
 cd bridge/python
 
-# Install in development mode (editable)
+# Install in development mode (recommended for development)
 pip install -e .
 
 # Or install normally
 pip install .
 ```
 
-## Run STM32G4 board on gem5 SE mode with gem5-se-use microbenchmarks in Entobench
+**Verify installation:**
+
+```bash
+python3 -c "import bridge; print('Bridge library installed successfully')"
+```
+
+### Entobench
+
+Entobench provides microbenchmarks for evaluating embedded system performance.
+
+**Build Entobench:**
 
 ```bash
 cd ento-bench
-cmake -S $PWD -B $PWD/build -DCMAKE_TOOLCHAIN_FILE=gem5-cmake/arm-gem5.cmake
-cmake --build build 
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=gem5-cmake/arm-gem5.cmake
+cmake --build build
 ```
 
-Example of running `add-16-bits-pc-stream-1`:
+This will generate benchmark binaries in `ento-bench/build/benchmark/`.
 
-```bash
-gem5/build/ARM/gem5.opt -re -d add-16-bits-pc-stream-1-m5out gem5-script/run-binary.py  --binary ento-bench/build/benchmark/ubench/execution/bin/add-16-bits-pc-stream-1 --mode=se
-```
+## Running Simulations
 
-gem5 experiment result will be in `add-16-bits-pc-stream-1-m5out`.
+### SE Mode: Microbenchmarks
 
-Use helper script to run all:
+Syscall Emulation (SE) mode allows running bare-metal binaries with Linux system emulation.
+
+**Run a single benchmark:**
 
 ```bash
 export WORKDIR=$PWD
-python3 $WORKDIR/example/gem5-ubench/helper.py --gem5-path $WORKDIR/gem5/build/ARM/gem5.opt --gem5-script $WORKDIR/gem5-script/run-binary.py --entobench-build-dir $WORKDIR/ento-bench/build --processes 2 --output-dir $WORKDIR/ubench-m5out
+
+# Example: run add-16-bits-pc-stream-1 benchmark
+gem5/build/ARM/gem5.opt -re -d add-16-bits-pc-stream-1-m5out \
+    gem5-script/run-binary.py \
+    --binary ento-bench/build/benchmark/ubench/execution/bin/add-16-bits-pc-stream-1 \
+    --mode se
 ```
 
-What the helper script takes:
+Results will be saved in `add-16-bits-pc-stream-1-m5out/` with:
+- `stats.txt` - Performance statistics
+- `config.ini` - Simulation configuration
+- `simout.txt` / `simerr.txt` - Simulation output/errors
+
+**Run all benchmarks in parallel:**
 
 ```bash
-usage: helper.py [-h] --gem5-path GEM5_PATH --gem5-script GEM5_SCRIPT --entobench-build-dir ENTOBENCH_BUILD_DIR [--processes PROCESSES]
-                 [--output-dir OUTPUT_DIR]
+export WORKDIR=$PWD
 
-Run all microbenchmarks in gem5 with entobench
-
-options:
-  -h, --help            show this help message and exit
-  --gem5-path GEM5_PATH
-                        Path to the gem5 executable
-  --gem5-script GEM5_SCRIPT
-                        Path to the gem5 script
-  --entobench-build-dir ENTOBENCH_BUILD_DIR
-                        Path to the entobench build directory
-  --processes PROCESSES
-                        Number of parallel processes to use
-  --output-dir OUTPUT_DIR
-                        Directory to store output logs
+python3 $WORKDIR/example/gem5-ubench/helper.py \
+    --gem5-path $WORKDIR/gem5/build/ARM/gem5.opt \
+    --gem5-script $WORKDIR/gem5-script/run-binary.py \
+    --entobench-build-dir $WORKDIR/ento-bench/build \
+    --processes 4 \
+    --output-dir $WORKDIR/ubench-m5out
 ```
 
-## Run STM32G4 board on gem5 FS mode with Webots
+**Helper script options:**
+
+| Option | Description |
+|--------|-------------|
+| `--gem5-path` | Path to the gem5 executable |
+| `--gem5-script` | Path to the gem5 Python configuration script |
+| `--entobench-build-dir` | Path to the entobench build directory |
+| `--processes` | Number of parallel simulations (default: 1) |
+| `--output-dir` | Directory to store all output logs |
+
+### FS Mode: gem5 + Webots
+
+Full System (FS) mode runs gem5 with Webots for realistic robot simulation with accurate timing.
+
+**Prerequisites:**
+- gem5 built with ARM support
+- Webots installed and built
+- Bridge library Python bindings installed
+- Firmware binary compiled (ELF format, not raw binary)
+
+**Run co-simulation:**
 
 ```bash
 export WORKDIR=$PWD
 source venv/bin/activate
-python3 example/gem5-webot/helper.py --gem5-path $WORKDIR/gem5/build/ARM/gem5.opt --gem5-script $WORKDIR/gem5-script/gem5-webots-script.py --gem5-binary $WORKDIR/example/gem5-webot/gem5-binary/build/firmware.elf --webots-path $WORKDIR/webots/webots --webots-world $WORKDIR/example/gem5-webot/webot-models/worlds/plane.wbt
+
+python3 example/gem5-webot/helper.py \
+    --gem5-path $WORKDIR/gem5/build/ARM/gem5.opt \
+    --gem5-script $WORKDIR/gem5-script/gem5-webots-script.py \
+    --gem5-binary $WORKDIR/example/gem5-webot/gem5-binary/build/firmware.elf \
+    --webots-path $WORKDIR/webots/webots \
+    --webots-world $WORKDIR/example/gem5-webot/webot-models/worlds/plane.wbt \
+    --output-dir $WORKDIR/gem5-webots-output
 ```
 
-What the script takes:
+**Helper script options:**
 
-```
-usage: helper.py [-h] --gem5-path GEM5_PATH --gem5-script GEM5_SCRIPT --gem5-binary GEM5_BINARY --webots-path WEBOTS_PATH --webots-world
-                 WEBOTS_WORLD [--output-dir OUTPUT_DIR]
+| Option | Description |
+|--------|-------------|
+| `--gem5-path` | Path to the gem5 executable |
+| `--gem5-script` | Path to the gem5-webots integration script |
+| `--gem5-binary` | Path to the firmware binary (must be ELF format) |
+| `--webots-path` | Path to the Webots executable |
+| `--webots-world` | Path to the Webots world file (.wbt) |
+| `--output-dir` | Directory to store output logs (optional) |
 
-Run the bridge helper server to connect gem5 and Webots.
+**Note:** The firmware binary must be in ELF format, not raw binary (.bin). If you only have a .bin file, you need the corresponding .elf file.
 
-options:
-  -h, --help            show this help message and exit
-  --gem5-path GEM5_PATH
-                        Path to the gem5 executable
-  --gem5-script GEM5_SCRIPT
-                        Path to the gem5 script
-  --gem5-binary GEM5_BINARY
-                        Path to the binary to run in gem5
-  --webots-path WEBOTS_PATH
-                        Path to the Webots executable
-  --webots-world WEBOTS_WORLD
-                        Path to the Webots world file
-  --output-dir OUTPUT_DIR
-                        Directory to store output logs
-```
+## Troubleshooting
+
+### gem5 Issues
+
+**Segmentation fault in `resetCPSR()`:**
+- Ensure you're using `--mode se` for SE binaries and `--mode fs` for FS binaries
+- Check that the system is properly initialized
+
+**"Could not load kernel file" error:**
+- Verify the binary path is correct
+- Ensure the binary is in ELF format (use `file` command to check)
+- For raw binaries, convert to ELF or use a different loader
+
+**Memory address range overlapping:**
+- This has been fixed in the board configuration
+- If you see this and using the SE board, ensure `se_STM32G4.py` doesn't define duplicate memory regions
+
+### Webots Issues
+
+**Webots won't start:**
+- Check that `WEBOTS_HOME` is set correctly
+- Verify all dependencies are installed
+- Try running `webots --version` to test the installation
+
+**Bridge connection fails:**
+- Ensure the bridge Python library is installed: `python3 -c "import bridge"`
+- Check that Unix domain sockets are supported on your system
+- Verify no other process is using the socket path
+
+### Build Issues
+
+**C++17 compilation errors:**
+- Ensure your GCC version is 7.0 or later: `g++ --version`
+- Try setting explicitly: `export CXX=g++-9` (or newer)
+
+**Python import errors:**
+- Activate the virtual environment: `source venv/bin/activate`
+- Reinstall the bridge library: `cd bridge/python && pip install -e .`
+
+**Out of memory during build:**
+- Reduce parallel jobs: `scons build/ARM/gem5.opt -j4` (instead of `$(nproc)`)
+- Close unnecessary applications
+- Consider using a machine with more RAM (16GB+ recommended for gem5)
