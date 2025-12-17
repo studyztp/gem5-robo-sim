@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from board.cores.M4_core import CortexM4Processor
-from board.cache.ART import ARTICache, ARTDCache
+from board.MCU.cores.M4_core import CortexM4Processor
+from board.MCU.cache.ART import ARTICache, ARTDCache
 
 from m5.objects import (
     AddrRange,
@@ -13,7 +13,6 @@ from m5.objects import (
     System,
     VoltageDomain,
     NoncoherentXBar,
-    DummySPI,
 )
 
 class STM32G4SEBoard:
@@ -100,23 +99,6 @@ class STM32G4SEBoard:
         self.system.sram2.latency = "10ns"
         self.system.sram2.bandwidth = "400MiB/s"
 
-        # create dummySPI
-        self.system.dummy_spi = DummySPI(
-            target_address=self.sram1.start,
-            target_cpu=self.system.processor.get_cores()[0].core,
-            interrupt_thread_id=1,
-            move_delay_cycles=100,
-            grid_width=10,
-            grid_height=10,
-            start_x=0,
-            start_y=0,
-            pio_addr=self.pio_region.start,
-            pio_size=self.pio_region.size(),
-            pio_latency="10ns"
-        )
-        self.system.dummy_spi.pio = self.system.membus.mem_side_ports
-        self.system.dummy_spi.dma = self.system.membus.cpu_side_ports
-
         # ART I-Cache+prefetcher and D-Cache
         self.system.icache = ARTICache(flash_addr_range=self.flash_memory)
         self.system.dcache = ARTDCache(flash_addr_range=self.flash_memory)
@@ -158,4 +140,7 @@ class STM32G4SEBoard:
         self.process.map(self.sram2.start, self.sram2.start, self.sram2.size())
         self.process.map(self.pio_region.start, self.pio_region.start, self.pio_region.size())
         self.process.map(self.m5op_region.start, self.m5op_region.start, self.m5op_region.size())
+
+    def get_system(self):
+        return self.system
         

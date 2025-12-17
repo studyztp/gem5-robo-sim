@@ -1,15 +1,14 @@
-import argparse
+# add current directory to sys.path to allow imports from it
+import sys
 from pathlib import Path
+sys.path.append(Path(__file__).parent.parent.as_posix())
+
+import argparse
 import array, struct, ctypes
 from bridge import _bridge as b
 import m5
 from m5.objects import Root
-from boards.fs_STM32G4 import STM32G4FSBoard
-
-import sys, os
-
-# add current directory to sys.path to allow imports from it
-sys.path.append(os.getcwd())
+from board.fs_STM32G4 import STM32G4FSBoard
 
 parser = argparse.ArgumentParser(
     description="Run a gem5 simulation with the demo stm32g4 MCU board in FS"

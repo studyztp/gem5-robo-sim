@@ -26,22 +26,21 @@ if not binary_path.is_file():
     raise FileNotFoundError(f"Binary file '{binary_path.as_posix()}' does not "
                             "exist.")
 
-server_name = args.server_name
-
 if args.mode == "fs":
-    from boards.fs_STM32G4 import STM32G4FSBoard
+    from board.fs_STM32G4 import STM32G4FSBoard
     board = STM32G4FSBoard()
 else:
-    from boards.se_STM32G4 import STM32G4SEBoard
+    from board.se_STM32G4 import STM32G4SEBoard
     board = STM32G4SEBoard()
 board.setup_workload(binary_path)
 system = board.get_system()
-
-root = Root(full_system=True, system=system)
-
+print("System created.")
+root = Root(full_system=True if args.mode == "fs" else False, system=system)
+print("Root created.")
 m5.instantiate()
-
+print("Simulation instantiated.")
 if args.mode == "se":
+    print("Setting up process memory mappings...")
     board.setup_process_mappings()
 
 runtimes = []

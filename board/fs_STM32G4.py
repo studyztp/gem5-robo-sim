@@ -1,5 +1,5 @@
-from board.cores.M4_core import CortexM4Processor
-from board.cache.ART import ARTICache, ARTDCache
+from board.MCU.cores.M4_core import CortexM4Processor
+from board.MCU.cache.ART import ARTICache, ARTDCache
 from pathlib import Path
 
 from m5.objects import (
@@ -104,11 +104,11 @@ class STM32G4FSBoard:
             stderr = "stderr",
         )
         # create Flash memory and connect it to the membus
-        self.system.flash_memory = SimpleMemory()
-        self.system.flash_memory.range = flash_memory
-        self.system.flash_memory.port = self.system.membus.mem_side_ports
-        self.system.flash_memory.latency = "40ns"
-        self.system.flash_memory.bandwidth = "190MiB/s"
+        # self.system.flash_memory = SimpleMemory()
+        # self.system.flash_memory.range = flash_memory
+        # self.system.flash_memory.port = self.system.membus.mem_side_ports
+        # self.system.flash_memory.latency = "40ns"
+        # self.system.flash_memory.bandwidth = "190MiB/s"
 
         # create SRAM 1 memory and connect it to the membus
         self.system.sram1 = SimpleMemory()
@@ -150,7 +150,7 @@ class STM32G4FSBoard:
         self.system.realview.attachOnChipIO(self.system.membus, self.system.iobridge)
         self.system.realview.attachIO(self.system.iobus)
         self.system.system_port = self.system.membus.cpu_side_ports
-
+        # This is where the flash memory is connected in the real STM32G4 board
         self.system.realview.flash0.latency = "40ns"
         self.system.realview.flash0.bandwidth = "190MiB/s"
         self.system.realview.flash0.range = flash_memory
