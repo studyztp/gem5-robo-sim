@@ -4,7 +4,6 @@ A simulation framework integrating gem5 with Webots for robotic systems on STM32
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
 - [Building Tools](#building-tools)
   - [gem5](#gem5)
   - [Webots](#webots)
