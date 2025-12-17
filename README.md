@@ -54,8 +54,6 @@ sudo apt-get install -y \
 
 **Set up environment variables:**
 
-Add these to your `~/.bashrc` or run before each session:
-
 ```bash
 # Optional: Disable saving screen perspective changes
 export WEBOTS_DISABLE_SAVE_SCREEN_PERSPECTIVE_ON_CLOSE=1
