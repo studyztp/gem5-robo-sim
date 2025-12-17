@@ -1,14 +1,12 @@
 from pathlib import Path
 
-from cores.M4_core import CortexM4Processor
-from cache.ART import ARTICache, ARTDCache
+from board.cores.M4_core import CortexM4Processor
+from board.cache.ART import ARTICache, ARTDCache
 
-import m5
 from m5.objects import (
     AddrRange,
     BadAddr,
     Process,
-    Root,
     SEWorkload,
     SimpleMemory,
     SrcClockDomain,

@@ -1,5 +1,5 @@
-from boards.cores.M4_core import CortexM4Processor
-from boards.cache.ART import ARTICache, ARTDCache
+from board.cores.M4_core import CortexM4Processor
+from board.cache.ART import ARTICache, ARTDCache
 from pathlib import Path
 
 from m5.objects import (
