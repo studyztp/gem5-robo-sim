@@ -4,6 +4,15 @@
 
 ### gem5
 
+Ubuntu dependencies:
+
+```
+build-essential scons python3-dev git pre-commit zlib1g zlib1g-dev \
+    libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
+    libboost-all-dev  libhdf5-serial-dev python3-pydot python3-venv python3-tk mypy \
+    m4 libcapstone-dev libpng-dev libelf-dev pkg-config wget cmake doxygen clang-format
+```
+
 ```bash
 cd gem5
 scons build/ARM/gem5.opt -j$(nproc)
@@ -45,7 +54,7 @@ make -j$(nproc)
 
 ### bridge
 
-dependencies:
+Ubuntu dependencies:
 
 ```text
 build-essential cmake g++ make python3 python3-dev python3-pip
