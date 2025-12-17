@@ -1,12 +1,11 @@
 import argparse
 from pathlib import Path
-import m5
-from m5.objects import Root
-
 import sys, os
 
-# add current directory to sys.path to allow imports from it
-sys.path.append(os.getcwd())
+sys.path.append(Path(__file__).parent.parent.as_posix())
+
+import m5
+from m5.objects import Root
 
 parser = argparse.ArgumentParser(
     description="Run a gem5 simulation with the demo stm32g4 MCU board in FS"
