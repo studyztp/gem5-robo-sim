@@ -1,0 +1,9 @@
+[submodule "gem5"]
+	path = gem5
+	url = https://github.com/studyztp/gem5.git
+[submodule "webots"]
+	path = webots
+	url = https://github.com/cyberbotics/webots.git
+[submodule "bridge"]
+	path = bridge
+	url = https://github.com/studyztp/bridge.git
